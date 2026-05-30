@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/weird",
+      "handlerId": 1,
+      "handlerFile": "weird.get.ts",
+      "hasHandler": false,
+      "params": [],
+      "schema": {
+        "output": {
+          "type": "weird_type",
+          "fields": {}
+        }
+      }
+    }
+  ]
+}

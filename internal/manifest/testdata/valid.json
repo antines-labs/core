@@ -1,0 +1,130 @@
+{
+  "version": 1,
+  "routes": [
+    {
+      "method": "POST",
+      "path": "/users",
+      "handlerId": 1,
+      "handlerFile": "users.post.ts",
+      "hasHandler": true,
+      "params": [],
+      "schema": {
+        "input": {
+          "type": "object",
+          "fields": {
+            "name": {
+              "schema": { "type": "string", "validations": { "min": 2, "max": 100 } },
+              "optional": false,
+              "nullable": false
+            },
+            "email": {
+              "schema": { "type": "string", "validations": { "email": true } },
+              "optional": false,
+              "nullable": false
+            },
+            "role": {
+              "schema": { "type": "enum", "values": ["admin", "member", "viewer"] },
+              "optional": false,
+              "nullable": false
+            }
+          },
+          "strict": false
+        },
+        "output": {
+          "type": "object",
+          "fields": {
+            "id": {
+              "schema": { "type": "string", "validations": { "uuid": true } },
+              "optional": false,
+              "nullable": false
+            },
+            "name": {
+              "schema": { "type": "string", "validations": {} },
+              "optional": false,
+              "nullable": false
+            },
+            "createdAt": {
+              "schema": { "type": "date" },
+              "optional": false,
+              "nullable": false
+            }
+          },
+          "strict": false
+        },
+        "errors": {
+          "email_taken": { "status": 409, "message": "E-mail já está em uso" }
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "handlerId": 2,
+      "handlerFile": "auth/login.post.ts",
+      "hasHandler": true,
+      "params": [],
+      "schema": {
+        "input": {
+          "type": "object",
+          "fields": {
+            "email": {
+              "schema": { "type": "string", "validations": { "email": true } },
+              "optional": false,
+              "nullable": false
+            },
+            "password": {
+              "schema": { "type": "string", "validations": { "min": 8 } },
+              "optional": false,
+              "nullable": false
+            }
+          },
+          "strict": false
+        },
+        "output": {
+          "type": "object",
+          "fields": {
+            "token": {
+              "schema": { "type": "string" },
+              "optional": false,
+              "nullable": false
+            },
+            "user": {
+              "schema": {
+                "type": "object",
+                "fields": {
+                  "id": { "schema": { "type": "string", "validations": { "uuid": true } }, "optional": false, "nullable": false },
+                  "name": { "schema": { "type": "string" }, "optional": false, "nullable": false }
+                },
+                "strict": false
+              },
+              "optional": false,
+              "nullable": false
+            }
+          },
+          "strict": false
+        },
+        "errors": {
+          "invalid_credentials": { "status": 401, "message": "E-mail ou senha inválidos" }
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/health",
+      "handlerId": 3,
+      "handlerFile": "health.get.ts",
+      "hasHandler": false,
+      "params": [],
+      "schema": {
+        "output": {
+          "type": "object",
+          "fields": {
+            "status": { "schema": { "type": "string" }, "optional": false, "nullable": false },
+            "uptime": { "schema": { "type": "number" }, "optional": false, "nullable": false }
+          },
+          "strict": false
+        }
+      }
+    }
+  ]
+}
