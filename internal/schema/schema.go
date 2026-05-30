@@ -42,11 +42,11 @@ type StringValidations struct {
 }
 
 type NumberValidations struct {
-	Int      *bool   `json:"int,omitempty"`
+	Int      *bool    `json:"int,omitempty"`
 	Min      *float64 `json:"min,omitempty"`
 	Max      *float64 `json:"max,omitempty"`
-	Positive *bool   `json:"positive,omitempty"`
-	Negative *bool   `json:"negative,omitempty"`
+	Positive *bool    `json:"positive,omitempty"`
+	Negative *bool    `json:"negative,omitempty"`
 }
 
 type DateValidations struct {

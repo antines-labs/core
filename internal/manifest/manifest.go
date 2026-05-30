@@ -10,26 +10,26 @@ import (
 
 // Manifest is the top-level structure of antines-manifest.json.
 type Manifest struct {
-	Version int            `json:"version"`
+	Version int             `json:"version"`
 	Routes  []RouteManifest `json:"routes"`
 }
 
 // RouteManifest represents a single route in the manifest.
 type RouteManifest struct {
-	Method      string          `json:"method"`
-	Path        string          `json:"path"`
-	HandlerID   int             `json:"handlerId"`
-	HandlerFile string          `json:"handlerFile"`
-	HasHandler  bool            `json:"hasHandler"`
-	Params      []string        `json:"params"`
-	Schema      RouteSchema     `json:"schema"`
+	Method      string      `json:"method"`
+	Path        string      `json:"path"`
+	HandlerID   int         `json:"handlerId"`
+	HandlerFile string      `json:"handlerFile"`
+	HasHandler  bool        `json:"hasHandler"`
+	Params      []string    `json:"params"`
+	Schema      RouteSchema `json:"schema"`
 }
 
 // RouteSchema holds the input/output/errors schemas for a route.
 type RouteSchema struct {
-	Input  *schema.SchemaIR          `json:"input,omitempty"`
-	Output *schema.SchemaIR          `json:"output,omitempty"`
-	Errors map[string]ErrorDef       `json:"errors,omitempty"`
+	Input  *schema.SchemaIR    `json:"input,omitempty"`
+	Output *schema.SchemaIR    `json:"output,omitempty"`
+	Errors map[string]ErrorDef `json:"errors,omitempty"`
 }
 
 // ErrorDef describes a business-logic error.
@@ -83,20 +83,17 @@ func (m *Manifest) validate() error {
 			return fmt.Errorf("route %d: missing or zero handlerId", i)
 		}
 
-		// Check for duplicate handler IDs
 		if usedIDs[r.HandlerID] {
 			return fmt.Errorf("route %d: duplicate handlerId %d", i, r.HandlerID)
 		}
 		usedIDs[r.HandlerID] = true
 
-		// Check for duplicate method+path
 		key := r.Method + " " + r.Path
 		if seenPaths[key] {
 			return fmt.Errorf("route %d: duplicate %s", i, key)
 		}
 		seenPaths[key] = true
 
-		// Validate schemas
 		if r.Schema.Input != nil {
 			if err := validateSchemaNode(r.Schema.Input); err != nil {
 				return fmt.Errorf("route %d (%s): input schema: %w", i, key, err)
