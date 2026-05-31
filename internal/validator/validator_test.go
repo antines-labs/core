@@ -267,7 +267,7 @@ func TestCompileFromSchemaIR(t *testing.T) {
 		Fields: map[string]schema.FieldIR{
 			"name": {
 				Schema: schema.SchemaIR{
-					Type:       "string",
+					Type:        "string",
 					Validations: json.RawMessage(`{"min": 2, "max": 100}`),
 				},
 				Optional: false,
@@ -275,7 +275,7 @@ func TestCompileFromSchemaIR(t *testing.T) {
 			},
 			"email": {
 				Schema: schema.SchemaIR{
-					Type:       "string",
+					Type:        "string",
 					Validations: json.RawMessage(`{"email": true}`),
 				},
 				Optional: false,
