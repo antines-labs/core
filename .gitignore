@@ -1,1 +1,4 @@
 dist/
+antines
+antines.exe
+*.test
