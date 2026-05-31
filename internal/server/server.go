@@ -6,9 +6,12 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"os"
+	"os/exec"
 	"os/signal"
+	"path/filepath"
 	"sync"
 	"syscall"
 	"time"
@@ -26,6 +29,9 @@ type Config struct {
 	ManifestPath  string
 	WorkerCount   int
 	WorkerTimeout time.Duration
+	WorkerEntry   string // path to the worker JS entry point
+	BunBinary     string // bun binary path (default: "bun")
+	WorkerDir     string // temp dir for worker sockets (default: temp dir)
 }
 
 // DefaultConfig returns a sensible default configuration.
@@ -35,6 +41,7 @@ func DefaultConfig() Config {
 		ManifestPath:  "antines-manifest.json",
 		WorkerCount:   4,
 		WorkerTimeout: 10 * time.Second,
+		BunBinary:     "bun",
 	}
 }
 
@@ -149,11 +156,62 @@ func (s *Server) Start() error {
 			MaxRetries:  2,
 		}
 		s.pool = worker.NewPool(poolCfg)
+		if err := s.spawnWorkers(); err != nil {
+			return fmt.Errorf("server: spawn workers: %w", err)
+		}
 	} else {
 		log.Println("No JS handlers — skipping worker pool")
 	}
 
 	return s.serveHTTP()
+}
+
+func (s *Server) spawnWorkers() error {
+	if s.config.WorkerEntry == "" {
+		return fmt.Errorf("worker entry not configured")
+	}
+	workerDir := s.config.WorkerDir
+	if workerDir == "" {
+		var err error
+		workerDir, err = os.MkdirTemp("", "antines-worker-*")
+		if err != nil {
+			return fmt.Errorf("create worker dir: %w", err)
+		}
+	}
+
+	for i := range s.config.WorkerCount {
+		socketPath := filepath.Join(workerDir, fmt.Sprintf("worker-%d.sock", i))
+
+		listener, err := net.Listen("unix", socketPath)
+		if err != nil {
+			return fmt.Errorf("listen worker %d: %w", i, err)
+		}
+
+		cmd := exec.Command(s.config.BunBinary, "run", s.config.WorkerEntry,
+			"--socket", socketPath,
+			"--manifest", s.config.ManifestPath,
+		)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+
+		if err := cmd.Start(); err != nil {
+			listener.Close()
+			return fmt.Errorf("start worker %d: %w", i, err)
+		}
+
+		conn, err := listener.Accept()
+		if err != nil {
+			cmd.Process.Kill()
+			listener.Close()
+			return fmt.Errorf("accept worker %d: %w", i, err)
+		}
+
+		listener.Close()
+		s.pool.AddConn(uint32(i+1), conn)
+		log.Printf("Worker %d connected (socket: %s)", i+1, socketPath)
+	}
+
+	return nil
 }
 
 func (s *Server) serveHTTP() error {
@@ -303,11 +361,19 @@ func (s *Server) handleJSHander(rw *responseWriter, r *http.Request, entry *Rout
 			inputData = make(map[string]interface{})
 		}
 
+		// Add query params to input
+		for k, vals := range r.URL.Query() {
+			if len(vals) > 0 {
+				inputData[k] = vals[0]
+			}
+		}
+
 		// Add path params to input data
 		for k, v := range result.Params {
 			inputData["params."+k] = v
 		}
 
+		// Validate input
 		if entry.InputValidator != nil {
 			errs := entry.InputValidator.Validate(inputData)
 			if errs != nil {
