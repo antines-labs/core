@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/antines/core/internal/server"
+	"github.com/antines-labs/core/internal/server"
 )
 
 func main() {

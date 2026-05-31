@@ -3,7 +3,7 @@ package router
 import (
 	"testing"
 
-	"github.com/antines/core/internal/manifest"
+	"github.com/antines-labs/core/internal/manifest"
 )
 
 func TestNewFromManifest(t *testing.T) {

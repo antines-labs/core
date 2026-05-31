@@ -3,7 +3,7 @@ package router
 import (
 	"fmt"
 
-	"github.com/antines/core/internal/manifest"
+	"github.com/antines-labs/core/internal/manifest"
 )
 
 // Router wraps the trie and provides manifest-based route management.

@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/antines/core/internal/ipc"
-	"github.com/antines/core/internal/schema"
+	"github.com/antines-labs/core/internal/ipc"
+	"github.com/antines-labs/core/internal/schema"
 )
 
 func mustCompiledLayout(t *testing.T, rawJSON string) *ipc.CompiledLayout {

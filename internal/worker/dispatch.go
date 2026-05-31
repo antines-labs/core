@@ -6,7 +6,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/antines/core/internal/ipc"
+	"github.com/antines-labs/core/internal/ipc"
 )
 
 // DispatchResult holds the result of a worker dispatch.

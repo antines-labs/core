@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/antines/core/internal/schema"
+	"github.com/antines-labs/core/internal/schema"
 )
 
 // ValidationError describes a single validation failure.

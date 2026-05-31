@@ -10,12 +10,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/antines/core/internal/ipc"
-	"github.com/antines/core/internal/manifest"
-	"github.com/antines/core/internal/router"
-	"github.com/antines/core/internal/schema"
-	"github.com/antines/core/internal/validator"
-	"github.com/antines/core/internal/worker"
+	"github.com/antines-labs/core/internal/ipc"
+	"github.com/antines-labs/core/internal/manifest"
+	"github.com/antines-labs/core/internal/router"
+	"github.com/antines-labs/core/internal/schema"
+	"github.com/antines-labs/core/internal/validator"
+	"github.com/antines-labs/core/internal/worker"
 )
 
 func newTestServer(t *testing.T, m *manifest.Manifest) *Server {

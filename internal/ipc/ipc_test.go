@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/antines/core/internal/schema"
+	"github.com/antines-labs/core/internal/schema"
 )
 
 func mustLayout(t *testing.T, rawJSON string) *CompiledLayout {

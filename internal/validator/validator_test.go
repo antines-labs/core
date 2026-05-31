@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/antines/core/internal/schema"
+	"github.com/antines-labs/core/internal/schema"
 )
 
 // ---- String ----
