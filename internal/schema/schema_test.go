@@ -6,7 +6,7 @@ import (
 )
 
 func TestParseStringValidations(t *testing.T) {
-	s := SchemaIR{
+	s := IR{
 		Type: "string",
 		Validations: json.RawMessage(`{
 			"min": 2,
@@ -31,7 +31,7 @@ func TestParseStringValidations(t *testing.T) {
 }
 
 func TestParseNumberValidations(t *testing.T) {
-	s := SchemaIR{
+	s := IR{
 		Type: "number",
 		Validations: json.RawMessage(`{
 			"int": true,
@@ -57,7 +57,7 @@ func TestParseNumberValidations(t *testing.T) {
 
 func TestParseValidationsNonMatchingType(t *testing.T) {
 	// ParseStringValidations on a number type should return empty validations
-	s := SchemaIR{Type: "number", Validations: json.RawMessage(`{"int": true}`)}
+	s := IR{Type: "number", Validations: json.RawMessage(`{"int": true}`)}
 	v, err := s.ParseStringValidations()
 	if err != nil {
 		t.Fatalf("ParseStringValidations: %v", err)
@@ -68,7 +68,7 @@ func TestParseValidationsNonMatchingType(t *testing.T) {
 }
 
 func TestParseNoValidations(t *testing.T) {
-	s := SchemaIR{Type: "string"}
+	s := IR{Type: "string"}
 	v, err := s.ParseStringValidations()
 	if err != nil {
 		t.Fatalf("ParseStringValidations: %v", err)

@@ -2,10 +2,13 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/antines-labs/core/internal/server"
+	"github.com/antines-labs/core/internal/version"
 )
 
 func main() {
@@ -15,7 +18,13 @@ func main() {
 	timeout := flag.Duration("timeout", 10*time.Second, "worker request timeout")
 	workerEntry := flag.String("worker-entry", "", "path to worker JS entry point")
 	bunBinary := flag.String("bun", "bun", "bun binary path")
+	showVersion := flag.Bool("version", false, "print version and exit")
 	flag.Parse()
+
+	if *showVersion {
+		fmt.Println(version.String())
+		os.Exit(0)
+	}
 
 	cfg := server.Config{
 		Port:          *port,

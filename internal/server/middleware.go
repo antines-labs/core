@@ -34,6 +34,7 @@ func loggerMiddleware(next http.Handler) http.Handler {
 		next.ServeHTTP(lrw, r)
 		duration := time.Since(start)
 		requestID := r.Context().Value(ctxKeyRequestID)
+		//nolint:gosec // G706: request metadata is safe for logging
 		log.Printf("[%s] %s %s %d %s",
 			requestID,
 			r.Method,

@@ -14,7 +14,7 @@ import (
 
 func mustCompiledLayout(t *testing.T, rawJSON string) *ipc.CompiledLayout {
 	t.Helper()
-	var s schema.SchemaIR
+	var s schema.IR
 	if err := json.Unmarshal([]byte(rawJSON), &s); err != nil {
 		t.Fatalf("Unmarshal: %v", err)
 	}
@@ -169,7 +169,7 @@ func TestWorkerPoolAcquireCancelledContext(t *testing.T) {
 	defer c1.Close()
 	pool.AddConn(1, c1)
 
-	pool.Acquire(context.Background()) // make busy
+	_, _ = pool.Acquire(context.Background()) // make busy
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
@@ -253,7 +253,7 @@ func TestDispatchTimeout(t *testing.T) {
 	go func() {
 		defer wg.Done()
 		buf := make([]byte, 32)
-		server.Read(buf)
+		_, _ = server.Read(buf)
 		time.Sleep(200 * time.Millisecond)
 		server.Close()
 	}()

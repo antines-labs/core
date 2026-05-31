@@ -48,8 +48,8 @@ type CompiledLayout struct {
 	VariableCount int
 }
 
-// fieldTypeAndSize resolves a SchemaIR node to its wire type and size.
-func fieldTypeAndSize(s *schema.SchemaIR) (FieldType, FieldCategory, uint32, error) {
+// fieldTypeAndSize resolves a IR node to its wire type and size.
+func fieldTypeAndSize(s *schema.IR) (FieldType, FieldCategory, uint32, error) {
 	switch s.Type {
 	case "string":
 		return TypeString, FieldVariable, 0, nil
@@ -93,7 +93,7 @@ func fieldTypeAndSize(s *schema.SchemaIR) (FieldType, FieldCategory, uint32, err
 
 // fieldOrdered returns field names in insertion order (fieldOrder) if available,
 // falling back to alphabetically sorted names (deterministic).
-func fieldOrdered(s *schema.SchemaIR) []string {
+func fieldOrdered(s *schema.IR) []string {
 	if len(s.FieldOrder) > 0 {
 		return s.FieldOrder
 	}
@@ -105,8 +105,8 @@ func fieldOrdered(s *schema.SchemaIR) []string {
 	return names
 }
 
-// CalculateLayout computes the wire format layout from a SchemaIR object schema.
-func CalculateLayout(s *schema.SchemaIR) (*CompiledLayout, error) {
+// CalculateLayout computes the wire format layout from a IR object schema.
+func CalculateLayout(s *schema.IR) (*CompiledLayout, error) {
 	if s.Type != "object" {
 		return nil, fmt.Errorf("calculateLayout: expected object schema, got %q", s.Type)
 	}

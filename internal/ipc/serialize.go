@@ -25,7 +25,7 @@ func SerializeInput(layout *CompiledLayout, data map[string]interface{}) ([]byte
 
 	// track variable data positions
 	// absent optional fields use sentinel 0xFFFFFFFF
-	var variableOffsets = make([]uint32, varCount)
+	variableOffsets := make([]uint32, varCount)
 	for i := range variableOffsets {
 		variableOffsets[i] = sentinelAbsent
 	}

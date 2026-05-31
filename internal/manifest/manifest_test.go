@@ -184,7 +184,7 @@ func TestSchemaValidationHelpers(t *testing.T) {
 	emptyArr := &struct{}{} // not using
 	_ = emptyArr
 
-	av, err := (&schema.SchemaIR{Type: "array"}).ParseArrayValidations()
+	av, err := (&schema.IR{Type: "array"}).ParseArrayValidations()
 	if err != nil {
 		t.Fatalf("ParseArrayValidations: %v", err)
 	}

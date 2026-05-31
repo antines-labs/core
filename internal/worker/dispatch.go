@@ -17,7 +17,7 @@ type DispatchResult struct {
 
 // Dispatch sends input data to a worker, waits for the response, and returns the output.
 // It handles serialization, timeout, and retries on failure.
-func (p *WorkerPool) Dispatch(
+func (p *Pool) Dispatch(
 	ctx context.Context,
 	handlerID, requestID uint32,
 	inputLayout, outputLayout *ipc.CompiledLayout,
@@ -48,7 +48,7 @@ func (p *WorkerPool) Dispatch(
 	return nil, fmt.Errorf("worker: dispatch failed after %d retries: %w", p.config.MaxRetries, lastErr)
 }
 
-func (p *WorkerPool) dispatchOnce(
+func (p *Pool) dispatchOnce(
 	ctx context.Context,
 	handlerID, requestID uint32,
 	payload []byte,
@@ -64,8 +64,8 @@ func (p *WorkerPool) dispatchOnce(
 	if d, ok := ctx.Deadline(); ok && d.Before(deadline) {
 		deadline = d
 	}
-	worker.Conn.SetWriteDeadline(deadline)
-	worker.Conn.SetReadDeadline(deadline)
+	_ = worker.Conn.SetWriteDeadline(deadline)
+	_ = worker.Conn.SetReadDeadline(deadline)
 
 	// Write header + payload
 	h := ipc.NewHeader(ipc.DirGoToJS, ipc.MsgDispatch, requestID, handlerID, 0, uint32(len(payload)))

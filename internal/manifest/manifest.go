@@ -27,8 +27,8 @@ type RouteManifest struct {
 
 // RouteSchema holds the input/output/errors schemas for a route.
 type RouteSchema struct {
-	Input  *schema.SchemaIR    `json:"input,omitempty"`
-	Output *schema.SchemaIR    `json:"output,omitempty"`
+	Input  *schema.IR          `json:"input,omitempty"`
+	Output *schema.IR          `json:"output,omitempty"`
 	Errors map[string]ErrorDef `json:"errors,omitempty"`
 }
 
@@ -109,7 +109,7 @@ func (m *Manifest) validate() error {
 	return nil
 }
 
-func validateSchemaNode(n *schema.SchemaIR) error {
+func validateSchemaNode(n *schema.IR) error {
 	if n == nil {
 		return fmt.Errorf("schema node is nil")
 	}

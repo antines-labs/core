@@ -33,15 +33,15 @@ func (ve ValidationErrors) Error() string {
 	return strings.Join(msgs, "; ")
 }
 
-// ValidatorNode is the interface for all schema validators.
-type ValidatorNode interface {
+// Node is the interface for all schema validators.
+type Node interface {
 	// Validate checks the value against the schema.
 	// Returns nil if valid, or a slice of ValidationErrors.
 	Validate(value interface{}) ValidationErrors
 }
 
-// Compile converts a SchemaIR into a ValidatorNode tree.
-func Compile(s *schema.SchemaIR) (ValidatorNode, error) {
+// Compile converts a IR into a Node tree.
+func Compile(s *schema.IR) (Node, error) {
 	if s == nil {
 		return nil, fmt.Errorf("validator: cannot compile nil schema")
 	}
@@ -72,7 +72,7 @@ func Compile(s *schema.SchemaIR) (ValidatorNode, error) {
 
 // ---- Compilation helpers ----
 
-func compileString(s *schema.SchemaIR) (*StringValidator, error) {
+func compileString(s *schema.IR) (*StringValidator, error) {
 	v := &StringValidator{}
 	vals, err := s.ParseStringValidations()
 	if err != nil {
@@ -90,7 +90,7 @@ func compileString(s *schema.SchemaIR) (*StringValidator, error) {
 	return v, nil
 }
 
-func compileNumber(s *schema.SchemaIR) (*NumberValidator, error) {
+func compileNumber(s *schema.IR) (*NumberValidator, error) {
 	v := &NumberValidator{}
 	vals, err := s.ParseNumberValidations()
 	if err != nil {
@@ -106,14 +106,14 @@ func compileNumber(s *schema.SchemaIR) (*NumberValidator, error) {
 	return v, nil
 }
 
-func compileEnum(s *schema.SchemaIR) (*EnumValidator, error) {
+func compileEnum(s *schema.IR) (*EnumValidator, error) {
 	if len(s.Values) == 0 {
 		return nil, fmt.Errorf("validator: enum must have at least one value")
 	}
 	return &EnumValidator{Values: s.Values}, nil
 }
 
-func compileDate(s *schema.SchemaIR) (*DateValidator, error) {
+func compileDate(s *schema.IR) (*DateValidator, error) {
 	v := &DateValidator{}
 	vals, err := s.ParseDateValidations()
 	if err != nil {
@@ -126,7 +126,7 @@ func compileDate(s *schema.SchemaIR) (*DateValidator, error) {
 	return v, nil
 }
 
-func compileArray(s *schema.SchemaIR) (*ArrayValidator, error) {
+func compileArray(s *schema.IR) (*ArrayValidator, error) {
 	itemValidator, err := Compile(s.Items)
 	if err != nil {
 		return nil, fmt.Errorf("validator: array items: %w", err)
@@ -148,7 +148,7 @@ func compileArray(s *schema.SchemaIR) (*ArrayValidator, error) {
 	return v, nil
 }
 
-func compileObject(s *schema.SchemaIR) (*ObjectValidator, error) {
+func compileObject(s *schema.IR) (*ObjectValidator, error) {
 	v := &ObjectValidator{
 		Fields: make(map[string]FieldValidator),
 		Strict: s.Strict,
@@ -170,7 +170,7 @@ func compileObject(s *schema.SchemaIR) (*ObjectValidator, error) {
 	return v, nil
 }
 
-func compileNullable(s *schema.SchemaIR) (*NullableValidator, error) {
+func compileNullable(s *schema.IR) (*NullableValidator, error) {
 	if s.Inner == nil {
 		return nil, fmt.Errorf("validator: nullable must have inner schema")
 	}
@@ -181,7 +181,7 @@ func compileNullable(s *schema.SchemaIR) (*NullableValidator, error) {
 	return &NullableValidator{Inner: inner}, nil
 }
 
-func compileOptional(s *schema.SchemaIR) (*OptionalValidator, error) {
+func compileOptional(s *schema.IR) (*OptionalValidator, error) {
 	if s.Inner == nil {
 		return nil, fmt.Errorf("validator: optional must have inner schema")
 	}

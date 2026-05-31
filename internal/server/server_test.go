@@ -80,19 +80,21 @@ func startTestHTTPServer(t *testing.T, s *Server) int {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", s.handler)
 
+	//nolint:gosec // G102: random port for testing
 	listener, err := net.Listen("tcp", ":0")
 	if err != nil {
 		t.Fatalf("listen: %v", err)
 	}
 
-	go http.Serve(listener, recoveryMiddleware(requestIDMiddleware(loggerMiddleware(mux))))
+	//nolint:gosec // G114: test server doesn't need production timeouts
+	go func() { _ = http.Serve(listener, recoveryMiddleware(requestIDMiddleware(loggerMiddleware(mux)))) }()
 
 	return listener.Addr().(*net.TCPAddr).Port
 }
 
-func mustSchemaIR(t *testing.T, rawJSON string) *schema.SchemaIR {
+func mustIR(t *testing.T, rawJSON string) *schema.IR {
 	t.Helper()
-	var s schema.SchemaIR
+	var s schema.IR
 	if err := json.Unmarshal([]byte(rawJSON), &s); err != nil {
 		t.Fatalf("Unmarshal schema: %v", err)
 	}
@@ -111,7 +113,7 @@ func TestServerHealthRoute(t *testing.T) {
 				HandlerID:  1,
 				HasHandler: false,
 				Schema: manifest.RouteSchema{
-					Output: mustSchemaIR(t, `{
+					Output: mustIR(t, `{
 						"type":"object","strict":false,
 						"fields":{
 							"status":{"schema":{"type":"string"},"optional":false,"nullable":false},
@@ -137,7 +139,9 @@ func TestServerHealthRoute(t *testing.T) {
 	}
 
 	var body map[string]interface{}
-	json.NewDecoder(resp.Body).Decode(&body)
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		t.Fatalf("decode response body: %v", err)
+	}
 
 	if body["status"] != "ok" {
 		t.Errorf("expected status=ok, got %v", body["status"])
@@ -228,7 +232,7 @@ func TestServerValidationError(t *testing.T) {
 				HandlerID:  3,
 				HasHandler: true,
 				Schema: manifest.RouteSchema{
-					Input: mustSchemaIR(t, `{
+					Input: mustIR(t, `{
 						"type":"object","strict":false,
 						"fields":{
 							"email":{"schema":{"type":"string","validations":{"email":true}},"optional":false,"nullable":false}
@@ -251,14 +255,14 @@ func TestServerValidationError(t *testing.T) {
 	go func() {
 		defer wg.Done()
 		// Read and discard the dispatch (validation should fail before dispatch though)
-		server.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
+		_ = server.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
 		header, err := ipc.ReadHeader(server)
 		if err == nil {
 			payload := make([]byte, header.PayloadLen)
-			server.Read(payload)
+			_, _ = server.Read(payload)
 			// Send a minimal response
 			respHeader := ipc.NewHeader(ipc.DirJSToGo, ipc.MsgResult, header.RequestID, header.HandlerID, 200, 0)
-			ipc.WriteHeader(server, respHeader)
+			_ = ipc.WriteHeader(server, respHeader)
 		}
 		server.Close()
 	}()
@@ -282,7 +286,9 @@ func TestServerValidationError(t *testing.T) {
 	}
 
 	var respBody map[string]interface{}
-	json.NewDecoder(resp.Body).Decode(&respBody)
+	if err := json.NewDecoder(resp.Body).Decode(&respBody); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
 
 	if respBody["error"] != "validation failed" {
 		t.Errorf("expected validation error, got %v", respBody)
@@ -299,14 +305,14 @@ func TestServerJSHandlerDispatch(t *testing.T) {
 				HandlerID:  4,
 				HasHandler: true,
 				Schema: manifest.RouteSchema{
-					Input: mustSchemaIR(t, `{
+					Input: mustIR(t, `{
 						"type":"object","strict":false,
 						"fieldOrder":["name"],
 						"fields":{
 							"name":{"schema":{"type":"string"},"optional":false,"nullable":false}
 						}
 					}`),
-					Output: mustSchemaIR(t, `{
+					Output: mustIR(t, `{
 						"type":"object","strict":false,
 						"fieldOrder":["id"],
 						"fields":{
@@ -346,9 +352,9 @@ func TestServerJSHandlerDispatch(t *testing.T) {
 		respData := map[string]interface{}{"id": "user-42"}
 		respPayload, _ := ipc.SerializeInput(outputLayout, respData)
 		respHeader := ipc.NewHeader(ipc.DirJSToGo, ipc.MsgResult, header.RequestID, header.HandlerID, 200, uint32(len(respPayload)))
-		ipc.WriteHeader(server, respHeader)
+		_ = ipc.WriteHeader(server, respHeader)
 		if len(respPayload) > 0 {
-			server.Write(respPayload)
+			_, _ = server.Write(respPayload)
 		}
 	}()
 
@@ -370,7 +376,9 @@ func TestServerJSHandlerDispatch(t *testing.T) {
 	}
 
 	var respBody map[string]interface{}
-	json.NewDecoder(resp.Body).Decode(&respBody)
+	if err := json.NewDecoder(resp.Body).Decode(&respBody); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
 
 	if respBody["id"] != "user-42" {
 		t.Errorf("expected id=user-42, got %v", respBody["id"])

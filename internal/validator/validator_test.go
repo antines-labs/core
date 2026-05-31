@@ -259,14 +259,14 @@ func TestOptional(t *testing.T) {
 	assertInvalid(t, v, "x", "min")
 }
 
-// ---- Integration: compile from SchemaIR ----
+// ---- Integration: compile from IR ----
 
-func TestCompileFromSchemaIR(t *testing.T) {
-	ir := &schema.SchemaIR{
+func TestCompileFromIR(t *testing.T) {
+	ir := &schema.IR{
 		Type: "object",
 		Fields: map[string]schema.FieldIR{
 			"name": {
-				Schema: schema.SchemaIR{
+				Schema: schema.IR{
 					Type:        "string",
 					Validations: json.RawMessage(`{"min": 2, "max": 100}`),
 				},
@@ -274,7 +274,7 @@ func TestCompileFromSchemaIR(t *testing.T) {
 				Nullable: false,
 			},
 			"email": {
-				Schema: schema.SchemaIR{
+				Schema: schema.IR{
 					Type:        "string",
 					Validations: json.RawMessage(`{"email": true}`),
 				},
@@ -303,9 +303,9 @@ func TestCompileFromSchemaIR(t *testing.T) {
 
 // ---- Helpers ----
 
-func mustCompile(t *testing.T, rawJSON string) ValidatorNode {
+func mustCompile(t *testing.T, rawJSON string) Node {
 	t.Helper()
-	var ir schema.SchemaIR
+	var ir schema.IR
 	if err := json.Unmarshal([]byte(rawJSON), &ir); err != nil {
 		t.Fatalf("Unmarshal schema: %v", err)
 	}
@@ -316,7 +316,7 @@ func mustCompile(t *testing.T, rawJSON string) ValidatorNode {
 	return v
 }
 
-func assertValid(t *testing.T, v ValidatorNode, value interface{}) {
+func assertValid(t *testing.T, v Node, value interface{}) {
 	t.Helper()
 	errs := v.Validate(value)
 	if len(errs) > 0 {
@@ -324,7 +324,7 @@ func assertValid(t *testing.T, v ValidatorNode, value interface{}) {
 	}
 }
 
-func assertInvalid(t *testing.T, v ValidatorNode, value interface{}, expectedCodes ...string) {
+func assertInvalid(t *testing.T, v Node, value interface{}, expectedCodes ...string) {
 	t.Helper()
 	errs := v.Validate(value)
 	if len(errs) == 0 {

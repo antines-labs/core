@@ -1,0 +1,49 @@
+version: 2
+
+project_name: antines
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: antines
+    main: ./cmd/antines
+    binary: antines
+    ldflags:
+      - -s -w
+      - -X github.com/antines-labs/core/internal/version.Version={{ .Version }}
+      - -X github.com/antines-labs/core/internal/version.Commit={{ .Commit }}
+      - -X github.com/antines-labs/core/internal/version.Date={{ .Date }}
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - format: tar.gz
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}
+    files:
+      - LICENSE
+      - README.md
+
+checksum:
+  name_template: "checksums.txt"
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - Merge pull request
+      - Merge branch

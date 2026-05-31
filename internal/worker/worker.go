@@ -25,14 +25,14 @@ func DefaultConfig() Config {
 	}
 }
 
-// WorkerConn represents a single connection to a JS worker process.
-type WorkerConn struct {
+// Conn represents a single connection to a JS worker process.
+type Conn struct {
 	ID       uint32
 	Conn     net.Conn
 	Busy     bool
 	LastUsed time.Time
 	Cmd      *process // nil when using mock connections
-	pool     *WorkerPool
+	pool     *Pool
 }
 
 // process abstracts the worker OS process for testability.
@@ -40,10 +40,10 @@ type process struct {
 	cancel func()
 }
 
-// WorkerPool manages a pool of worker connections with round-robin dispatch.
-type WorkerPool struct {
+// Pool manages a pool of worker connections with round-robin dispatch.
+type Pool struct {
 	config  Config
-	workers []*WorkerConn
+	workers []*Conn
 	next    uint32
 	mu      sync.Mutex
 	stopped atomic.Bool
@@ -51,16 +51,16 @@ type WorkerPool struct {
 
 // NewPool creates a worker pool with the given config and connections.
 // conns should be one per worker, already connected.
-func NewPool(config Config) *WorkerPool {
-	return &WorkerPool{
+func NewPool(config Config) *Pool {
+	return &Pool{
 		config:  config,
-		workers: make([]*WorkerConn, 0),
+		workers: make([]*Conn, 0),
 	}
 }
 
 // AddConn adds an already-connected worker to the pool.
-func (p *WorkerPool) AddConn(id uint32, conn net.Conn) *WorkerConn {
-	w := &WorkerConn{
+func (p *Pool) AddConn(id uint32, conn net.Conn) *Conn {
+	w := &Conn{
 		ID:       id,
 		Conn:     conn,
 		LastUsed: time.Now(),
@@ -74,7 +74,7 @@ func (p *WorkerPool) AddConn(id uint32, conn net.Conn) *WorkerConn {
 
 // Acquire returns the next available (non-busy) worker using round-robin.
 // Blocks until a worker becomes available or context is cancelled.
-func (p *WorkerPool) Acquire(ctx context.Context) (*WorkerConn, error) {
+func (p *Pool) Acquire(ctx context.Context) (*Conn, error) {
 	if p.stopped.Load() {
 		return nil, fmt.Errorf("worker: pool is stopped")
 	}
@@ -110,7 +110,7 @@ func (p *WorkerPool) Acquire(ctx context.Context) (*WorkerConn, error) {
 }
 
 // Release marks a worker as available for dispatch.
-func (p *WorkerPool) Release(w *WorkerConn) {
+func (p *Pool) Release(w *Conn) {
 	p.mu.Lock()
 	w.Busy = false
 	w.LastUsed = time.Now()
@@ -119,7 +119,7 @@ func (p *WorkerPool) Release(w *WorkerConn) {
 
 // MarkDead removes a dead worker and closes its connection.
 // Returns true if the worker was found and removed.
-func (p *WorkerPool) MarkDead(w *WorkerConn) bool {
+func (p *Pool) MarkDead(w *Conn) bool {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
@@ -134,7 +134,7 @@ func (p *WorkerPool) MarkDead(w *WorkerConn) bool {
 }
 
 // Shutdown closes all worker connections.
-func (p *WorkerPool) Shutdown() error {
+func (p *Pool) Shutdown() error {
 	p.stopped.Store(true)
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -157,7 +157,7 @@ func (p *WorkerPool) Shutdown() error {
 }
 
 // Len returns the current number of workers.
-func (p *WorkerPool) Len() int {
+func (p *Pool) Len() int {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	return len(p.workers)

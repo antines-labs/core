@@ -2,8 +2,8 @@ package schema
 
 import "encoding/json"
 
-// SchemaIR represents any schema node in the Schema IR format.
-type SchemaIR struct {
+// IR represents any schema node in the Schema IR format.
+type IR struct {
 	Type string `json:"type"`
 
 	// String / Number / Date / Array validations (opaque, parsed by type)
@@ -18,17 +18,17 @@ type SchemaIR struct {
 	Values []string `json:"values,omitempty"`
 
 	// Array
-	Items *SchemaIR `json:"items,omitempty"`
+	Items *IR `json:"items,omitempty"`
 
 	// Nullable / Optional
-	Inner *SchemaIR `json:"inner,omitempty"`
+	Inner *IR `json:"inner,omitempty"`
 }
 
 type FieldIR struct {
-	Schema      SchemaIR `json:"schema"`
-	Optional    bool     `json:"optional"`
-	Nullable    bool     `json:"nullable"`
-	Description string   `json:"description,omitempty"`
+	Schema      IR     `json:"schema"`
+	Optional    bool   `json:"optional"`
+	Nullable    bool   `json:"nullable"`
+	Description string `json:"description,omitempty"`
 }
 
 // ---- Validation types (used after type assertion) ----
@@ -63,7 +63,7 @@ type ArrayValidations struct {
 
 // ---- Helpers ----
 
-func (s *SchemaIR) ParseStringValidations() (*StringValidations, error) {
+func (s *IR) ParseStringValidations() (*StringValidations, error) {
 	if s.Type != "string" || len(s.Validations) == 0 {
 		return &StringValidations{}, nil
 	}
@@ -74,7 +74,7 @@ func (s *SchemaIR) ParseStringValidations() (*StringValidations, error) {
 	return &v, nil
 }
 
-func (s *SchemaIR) ParseNumberValidations() (*NumberValidations, error) {
+func (s *IR) ParseNumberValidations() (*NumberValidations, error) {
 	if s.Type != "number" || len(s.Validations) == 0 {
 		return &NumberValidations{}, nil
 	}
@@ -85,7 +85,7 @@ func (s *SchemaIR) ParseNumberValidations() (*NumberValidations, error) {
 	return &v, nil
 }
 
-func (s *SchemaIR) ParseDateValidations() (*DateValidations, error) {
+func (s *IR) ParseDateValidations() (*DateValidations, error) {
 	if s.Type != "date" || len(s.Validations) == 0 {
 		return &DateValidations{}, nil
 	}
@@ -96,7 +96,7 @@ func (s *SchemaIR) ParseDateValidations() (*DateValidations, error) {
 	return &v, nil
 }
 
-func (s *SchemaIR) ParseArrayValidations() (*ArrayValidations, error) {
+func (s *IR) ParseArrayValidations() (*ArrayValidations, error) {
 	if s.Type != "array" || len(s.Validations) == 0 {
 		return &ArrayValidations{}, nil
 	}

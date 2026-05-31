@@ -50,8 +50,8 @@ type RouteEntry struct {
 	Route           manifest.RouteManifest
 	InputLayout     *ipc.CompiledLayout
 	OutputLayout    *ipc.CompiledLayout
-	InputValidator  validator.ValidatorNode
-	OutputValidator validator.ValidatorNode
+	InputValidator  validator.Node
+	OutputValidator validator.Node
 }
 
 // Server is the main HTTP server.
@@ -60,7 +60,7 @@ type Server struct {
 	manifest  *manifest.Manifest
 	trie      *router.Trie
 	registry  map[int]*RouteEntry
-	pool      *worker.WorkerPool
+	pool      *worker.Pool
 	httpSrv   *http.Server
 	startTime time.Time
 	mu        sync.Mutex
@@ -187,6 +187,7 @@ func (s *Server) spawnWorkers() error {
 			return fmt.Errorf("listen worker %d: %w", i, err)
 		}
 
+		//nolint:gosec // G204: BunBinary and WorkerEntry are provided via CLI flags by the user
 		cmd := exec.Command(s.config.BunBinary, "run", s.config.WorkerEntry,
 			"--socket", socketPath,
 			"--manifest", s.config.ManifestPath,
@@ -201,7 +202,7 @@ func (s *Server) spawnWorkers() error {
 
 		conn, err := listener.Accept()
 		if err != nil {
-			cmd.Process.Kill()
+			_ = cmd.Process.Kill()
 			listener.Close()
 			return fmt.Errorf("accept worker %d: %w", i, err)
 		}
@@ -220,8 +221,9 @@ func (s *Server) serveHTTP() error {
 
 	addr := fmt.Sprintf(":%d", s.config.Port)
 	s.httpSrv = &http.Server{
-		Addr:    addr,
-		Handler: recoveryMiddleware(requestIDMiddleware(loggerMiddleware(mux))),
+		Addr:              addr,
+		Handler:           recoveryMiddleware(requestIDMiddleware(loggerMiddleware(mux))),
+		ReadHeaderTimeout: 30 * time.Second,
 	}
 
 	log.Printf("HTTP server listening on %s", addr)
@@ -234,7 +236,9 @@ func (s *Server) WaitForShutdown() {
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 	sig := <-sigCh
 	log.Printf("Received signal %v, shutting down...", sig)
-	s.Shutdown()
+	if err := s.Shutdown(); err != nil {
+		log.Printf("shutdown error: %v", err)
+	}
 }
 
 // Shutdown gracefully stops the server.
@@ -429,7 +433,9 @@ func writeJSON(w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	if data != nil {
-		json.NewEncoder(w).Encode(data)
+		if err := json.NewEncoder(w).Encode(data); err != nil {
+			log.Printf("write JSON response: %v", err)
+		}
 	}
 }
 

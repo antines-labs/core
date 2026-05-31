@@ -232,7 +232,7 @@ func (v *DateValidator) Validate(value interface{}) ValidationErrors {
 // ---- ArrayValidator ----
 
 type ArrayValidator struct {
-	ItemValidator ValidatorNode
+	ItemValidator Node
 	Min           *int
 	Max           *int
 	Unique        *bool
@@ -290,7 +290,7 @@ func (v *ArrayValidator) Validate(value interface{}) ValidationErrors {
 // ---- ObjectValidator ----
 
 type FieldValidator struct {
-	Validator ValidatorNode
+	Validator Node
 	Optional  bool
 	Nullable  bool
 }
@@ -332,10 +332,8 @@ func (v *ObjectValidator) Validate(value interface{}) ValidationErrors {
 			if field.Optional {
 				continue
 			}
-			if field.Nullable {
-				// nullable without optional means the field must be present but can be null
-				// Actually, if it's not present and not optional, it's an error
-			}
+			// nullable without optional means the field must be present but can be null.
+			// If it's not present and not optional, it's always an error regardless of nullable.
 			errs = append(errs, ValidationError{
 				Path:    name,
 				Code:    "required",
@@ -365,7 +363,7 @@ func (v *ObjectValidator) Validate(value interface{}) ValidationErrors {
 // ---- NullableValidator ----
 
 type NullableValidator struct {
-	Inner ValidatorNode
+	Inner Node
 }
 
 func (v *NullableValidator) Validate(value interface{}) ValidationErrors {
@@ -378,7 +376,7 @@ func (v *NullableValidator) Validate(value interface{}) ValidationErrors {
 // ---- OptionalValidator ----
 
 type OptionalValidator struct {
-	Inner ValidatorNode
+	Inner Node
 }
 
 func (v *OptionalValidator) Validate(value interface{}) ValidationErrors {

@@ -12,7 +12,7 @@ import (
 
 func mustLayout(t *testing.T, rawJSON string) *CompiledLayout {
 	t.Helper()
-	var s schema.SchemaIR
+	var s schema.IR
 	if err := json.Unmarshal([]byte(rawJSON), &s); err != nil {
 		t.Fatalf("Unmarshal: %v", err)
 	}
