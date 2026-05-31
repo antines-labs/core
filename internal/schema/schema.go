@@ -10,8 +10,9 @@ type SchemaIR struct {
 	Validations json.RawMessage `json:"validations,omitempty"`
 
 	// Object
-	Fields map[string]FieldIR `json:"fields,omitempty"`
-	Strict bool               `json:"strict"`
+	Fields     map[string]FieldIR `json:"fields,omitempty"`
+	FieldOrder []string           `json:"fieldOrder,omitempty"` // preserves insertion order
+	Strict     bool               `json:"strict"`
 
 	// Enum
 	Values []string `json:"values,omitempty"`
