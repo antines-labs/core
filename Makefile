@@ -16,9 +16,16 @@ LDFLAGS += -X github.com/antines-labs/core/internal/version.Date=$(DATE)
 
 .PHONY: build test lint vet fmt clean run version
 
+INSTALL_DIR ?= $(HOME)/.local/bin
+
 build:
 	@mkdir -p $(OUT_DIR)
 	$(GO) build -ldflags="$(LDFLAGS)" -o $(OUT_DIR)/$(BINARY) ./cmd/antines
+
+build-dev:
+	@mkdir -p $(INSTALL_DIR)
+	$(GO) build -ldflags="$(LDFLAGS)" -o $(INSTALL_DIR)/antines-dev ./cmd/antines
+	@echo "installed antines-dev to $(INSTALL_DIR)/antines-dev"
 
 test:
 	$(GO) test ./... -count=1 -race -shuffle=on -timeout=60s -v
